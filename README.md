@@ -21,5 +21,40 @@ Możemy do tego celu wykorzystać funkcję memcpy() lub napisać prostą pętlę
 
 
 ```
-bajojajo
+for (i = 0; i < BUFFER_SIZE;i++)
+    dst_buffer[i] = src_buffer[i];
 ```
+
+Ponieważ mikrokontrolery mają relatywnie mało pamięci wykorzystywanie DMA jest tutaj trochę na wyrost, jednak spróbujmy porównać czasy wykonywania powyższej pętli oraz kopiowania przy użyciu DMA. Dzięki temu poznamy jak mechanizm ten sprawdza się w praktyce.
+
+Na początek zadeklarujmy 2 bufory – źródłowy i docelowy:
+
+```
+#define BUFFER_SIZE 32
+ 
+uint8_t src_buffer[BUFFER_SIZE];
+uint8_t dst_buffer[BUFFER_SIZE];
+
+```
+
+Pozostaje przygotować kanał DMA do pracy. Jak zwykle pierwszym krokiem jest uruchomienie zegara modułu peryferyjnego:
+```
+__HAL_RCC_DMA1_CLK_ENABLE();
+
+```
+
+Następnie deklarujemy zmienną z konfiguracją, ustawiamy pola i inicjalizujemy moduł:
+
+```
+DMA_HandleTypeDef dma;
+ 
+ dma.Instance = DMA1_Channel1;
+ dma.Init.Direction = DMA_MEMORY_TO_MEMORY;
+ dma.Init.PeriphInc = DMA_PINC_ENABLE;
+ dma.Init.MemInc = DMA_MINC_ENABLE;
+ dma.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+ dma.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+ dma.Init.Mode = DMA_NORMAL;
+ dma.Init.Priority = DMA_PRIORITY_HIGH;
+ HAL_DMA_Init(&dma);
+ ```
